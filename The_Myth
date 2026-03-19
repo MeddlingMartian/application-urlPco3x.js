@@ -1,0 +1,1395 @@
+import {f as be, u as fe, a as ge, r as o, B as X, c as J, j as e, n as $, d as b, p as y, t as g, b as W, Q as je, e as ye, g as ve, R as we, h as I, N as D, E as Se, l as P, i as _e, m as A, k as ke, o as Re, q as Ne} from "./vendor-Crw2tRZ3.js";
+import {e as Ce, o as Ee, c as Te, s as Fe} from "./reauthentications-CjNWqth-.js";
+const V = t => be(new Date().setSeconds(new Date().getSeconds() + t), {
+    roundingMethod: "ceil",
+    unit: "minute"
+});
+function M(t) {
+    window.location.href = `${t}?returnTo=${window.location.href}`
+}
+function v() {
+    const t = Z();
+    return t["csrf-token"] != null ? t["csrf-token"] : null
+}
+const Z = () => document.cookie.split(";").reduce( (t, s) => {
+    const [a,n] = s.trim().split("=").map(decodeURIComponent);
+    return {
+        ...t,
+        [a]: n
+    }
+}
+, {})
+  , Le = "update_activity"
+  , B = "/auth/reauthenticate"
+  , ee = "/auth/session"
+  , $e = "/auth/logout"
+  , K = async (t, s, a=void 0) => {
+    const n = await fetch(T(ee, t) + `?${Le}=${s}`, {
+        method: "GET",
+        signal: a
+    });
+    if (n.ok) {
+        try {
+            return await n.json()
+        } catch {
+            M(T(B, t))
+        }
+        return Promise.reject(n.statusText)
+    } else
+        return (n.status == 401 || n.status == 403) && M(T(B, t)),
+        Promise.reject(n.statusText)
+}
+  , Ue = async (t, s, a, n, r, c, l) => {
+    try {
+        const d = await fetch(t, {
+            method: "POST",
+            body: new URLSearchParams({
+                password: s,
+                reauthStrategy: c,
+                ...l != null ? {
+                    returnTo: l
+                } : {}
+            }).toString(),
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                "X-CSRF-Token": a
+            }
+        });
+        n(d)
+    } catch (d) {
+        r(d)
+    }
+}
+  , T = (t, s) => s == null ? t : `${s}${t}`
+  , Oe = (t, s, a=!0, n) => {
+    const r = fe()
+      , {data: c, isFetching: l} = ge({
+        queryKey: ["fetchSession"],
+        queryFn: ({signal: d}) => K(t, n, d),
+        refetchInterval: s,
+        enabled: a
+    }, r);
+    return {
+        data: c,
+        isFetching: l,
+        refetch: async d => {
+            const i = await K(t, d);
+            return r.setQueryData(["fetchSession"], i),
+            i
+        }
+    }
+}
+  , Q = ["keydown", "wheel", "mousedown", "touchstart", "touchmove"]
+  , _ = new X("idle-timer-channel")
+  , Ae = J(_)
+  , Ie = t => {
+    const [s,a] = o.useState(!1)
+      , [n,r] = o.useState(!0)
+      , c = o.useRef();
+    o.useEffect( () => {
+        Ae.awaitLeadership().then( () => {
+            a(!0),
+            n && i()
+        }
+        ),
+        _.postMessage({
+            type: "UserActivityRecorded"
+        })
+    }
+    , []),
+    o.useEffect( () => (_.addEventListener("message", l),
+    Q.forEach(u => {
+        document.addEventListener(u, d)
+    }
+    ),
+    () => {
+        _.removeEventListener("message", l),
+        Q.forEach(u => {
+            document.removeEventListener(u, d)
+        }
+        )
+    }
+    ), [s, n]),
+    o.useEffect( () => {
+        s && _.postMessage({
+            type: "UserStatusChanged",
+            isActive: n
+        })
+    }
+    , [n]);
+    const l = u => {
+        switch (u.type) {
+        case "UserActivityRecorded":
+            s && (i(),
+            !n && r(!0));
+            break;
+        case "UserStatusChanged":
+            s || r(u.isActive);
+            break
+        }
+    }
+      , d = () => {
+        s ? (i(),
+        !n && r(!0)) : _.postMessage({
+            type: "UserActivityRecorded"
+        })
+    }
+      , i = () => {
+        c.current && clearTimeout(c.current),
+        c.current = setTimeout( () => {
+            r(!1)
+        }
+        , t)
+    }
+    ;
+    return {
+        isUserActive: n,
+        isLeader: s
+    }
+}
+  , De = "current-session"
+  , E = new X(De)
+  , Pe = J(E)
+  , Me = ({authenticationEndpoint: t, sessionPollIntervalSeconds: s, sendActivityUpdates: a}) => {
+    const [n,r] = o.useState(!1)
+      , {isUserActive: c} = Ie(s * 1e3)
+      , [l,d] = o.useState(!0)
+      , [i,u] = o.useState(null)
+      , {data: h, isFetching: f, refetch: p} = Oe(t, s * 1e3, l, a && c);
+    n && !f && h && E.postMessage({
+        type: "Session",
+        session: h
+    }),
+    o.useEffect( () => {
+        Pe.awaitLeadership().then( () => {
+            r(!0),
+            d(!0)
+        }
+        )
+    }
+    , []);
+    const m = x => {
+        d(n),
+        n && x.type === "ExtendSessionExpiry" ? p(!0) : !n && x.type === "Session" && u(x.session)
+    }
+    ;
+    return o.useEffect( () => (E.addEventListener("message", m),
+    () => E.removeEventListener("message", m)), [n]),
+    {
+        session: n ? h : i || h,
+        extendSessionExpiry: async () => {
+            n ? await p(!0) : await E.postMessage({
+                type: "ExtendSessionExpiry"
+            })
+        }
+    }
+}
+  , Be = ({secondsRemaining: t, staySignedIn: s, disableReauthAction: a=!1}) => t > 300 ? null : e.jsxs($, {
+    variant: "warning",
+    children: [e.jsxs($.Title, {
+        children: ["You will be automatically logged out in less than", " ", V(t), "."]
+    }), e.jsx($.Description, {
+        children: a ? "" : e.jsx("p", {
+            children: "Would you like to stay signed in?"
+        })
+    }), a ? e.jsx(e.Fragment, {}) : e.jsx($.Actions, {
+        children: e.jsx(b, {
+            variant: "link",
+            onClick: () => {
+                s && s()
+            }
+            ,
+            children: "Stay signed in"
+        })
+    })]
+})
+  , F = ({className: t=""}) => e.jsx(y, {
+    variant: "error",
+    className: t,
+    children: "A token required to fulfil the request has expired. Please refresh the page and try again."
+})
+  , te = ({onReauthenticated: t, authenticationEndpoint: s, returnTo: a, reauthStrategy: n}) => {
+    const [r,c] = o.useState()
+      , [l,d] = o.useState("")
+      , [i,u] = o.useReducer(p => !p, !1);
+    let h = ee;
+    s !== null && (h = `${s}${h}`);
+    const f = v();
+    return e.jsxs("form", {
+        action: h,
+        method: "post",
+        onSubmit: async p => {
+            u(),
+            p.preventDefault(),
+            await Ue(h, l, f || "", async m => {
+                switch (m.status) {
+                case 200:
+                    {
+                        const x = await m.json();
+                        t(x.redirectUrl, x.showUSGovDisclaimer);
+                        break
+                    }
+                case 401:
+                    c("Invalid password"),
+                    u();
+                    break;
+                default:
+                    c("Could not validate password"),
+                    u()
+                }
+            }
+            , () => {
+                c("Could not validate password"),
+                u()
+            }
+            , n, a)
+        }
+        ,
+        children: [f === null && e.jsx(F, {}), r != null && e.jsx(y, {
+            variant: "error",
+            className: "bc-mt-5",
+            children: r
+        }), e.jsxs("div", {
+            className: "bc-form__group",
+            children: [e.jsx("label", {
+                className: "bc-label",
+                htmlFor: "password",
+                children: "Password"
+            }), e.jsx("input", {
+                className: "bc-text-input bc-text-input--block",
+                autoComplete: "current-password",
+                id: "password",
+                type: "password",
+                name: "password",
+                onChange: p => d(p.target.value)
+            })]
+        }), e.jsx("div", {
+            className: "bc-form__group",
+            children: e.jsx(b, {
+                type: "submit",
+                name: "commit",
+                value: "login",
+                disabled: i,
+                isFullWidth: !0,
+                children: i ? "Re-authenticating…" : "Re-authenticate"
+            })
+        })]
+    })
+}
+  , se = "/auth/reauthenticate/sso"
+  , Ge = ({onReauthenticateSuccessful: t, onReauthenticationFailed: s, onReauthenticationShowUSGovDisclaimer: a}) => (o.useEffect( () => {
+    let n = window.open(`${se}?saml_reauth_inline=false`, "saml-reauth");
+    const r = Ce();
+    return r.onmessage = c => {
+        switch (c) {
+        case Fe:
+            t();
+            break;
+        case Te:
+            a();
+            break;
+        case Ee:
+        default:
+            s();
+            break
+        }
+        n?.close(),
+        n = null
+    }
+    ,
+    () => {
+        n?.close(),
+        r.close().then()
+    }
+}
+, []),
+null)
+  , We = () => e.jsx(y, {
+    variant: "error",
+    children: "Re-authentication was unsuccessful"
+})
+  , ne = ({onReauthenticated: t, inline: s=!1}) => {
+    const [a,n] = o.useReducer(l => !l, !1)
+      , [r,c] = o.useState(!1);
+    return e.jsxs(e.Fragment, {
+        children: [e.jsx("p", {
+            children: "Re-authenticate with your SAML/SSO provider to continue."
+        }), !s && a && e.jsx(Ge, {
+            onReauthenticateSuccessful: () => {
+                n(),
+                t(!1)
+            }
+            ,
+            onReauthenticationFailed: () => {
+                n(),
+                c(!0)
+            }
+            ,
+            onReauthenticationShowUSGovDisclaimer: () => {
+                n(),
+                t(!0)
+            }
+        }), r && e.jsx(We, {}), e.jsx(b, {
+            type: "button",
+            name: "reauthenticate",
+            onClick: () => {
+                if (n(),
+                s) {
+                    const l = new URLSearchParams(window.location.search).get("returnTo");
+                    let d = `${se}?saml_reauth_inline=true`;
+                    l !== null && (d = `${d}&returnTo=${l}`),
+                    window.location.href = d
+                }
+            }
+            ,
+            disabled: a,
+            isFullWidth: !0,
+            children: a ? "Re-authenticating…" : "Re-authenticate with SAML/SSO"
+        })]
+    })
+}
+  , k = ({authenticationEndpoint: t, isFullWidth: s=!1, variant: a="link", label: n="Log out", ...r}) => {
+    const c = v();
+    return e.jsxs("form", {
+        action: T(`${$e}`, t),
+        method: "POST",
+        "data-testid": "ca-logout-form",
+        children: [c !== null && e.jsx("input", {
+            type: "hidden",
+            name: "authenticity-token",
+            value: c
+        }), e.jsx(b, {
+            type: "submit",
+            variant: a,
+            isFullWidth: s,
+            ...r,
+            children: n
+        })]
+    })
+}
+  , qe = ({setSessionRedirectUrl: t, onSprayComplete: s}) => e.jsx("iframe", {
+    src: t,
+    onLoad: () => {
+        s && s()
+    }
+    ,
+    hidden: !0,
+    "aria-hidden": "true",
+    tabIndex: -1
+})
+  , ze = ({secondsRemaining: t, saml: s, authenticationEndpoint: a="", onComplete: n}) => {
+    const [r,c] = o.useState()
+      , [l,d] = o.useState(!1);
+    return e.jsxs(e.Fragment, {
+        children: [e.jsxs(g, {
+            isOpen: !0,
+            children: [e.jsx(g.Header, {
+                children: e.jsx(g.Title, {
+                    children: "Re-authenticate to continue"
+                })
+            }), e.jsxs(g.Body, {
+                children: [e.jsxs("p", {
+                    children: ["You will be automatically logged out in less than", " ", e.jsxs("strong", {
+                        children: [V(t), "."]
+                    })]
+                }), e.jsx(W, {
+                    as: "span",
+                    children: "We require you to reauthenticate periodically in order to protect your account."
+                }), s ? e.jsx(ne, {
+                    onReauthenticated: i => {
+                        d(i),
+                        n(i)
+                    }
+                    ,
+                    inline: !1
+                }) : e.jsx(te, {
+                    authenticationEndpoint: a,
+                    onReauthenticated: (i, u) => {
+                        c(i),
+                        d(u)
+                    }
+                    ,
+                    reauthStrategy: "MODAL"
+                })]
+            }), e.jsx(g.Footer, {
+                className: "bc-bc-flex--justify-flex-start",
+                children: e.jsx(k, {})
+            })]
+        }), r != null && e.jsx(qe, {
+            setSessionRedirectUrl: r,
+            onSprayComplete: () => n(l)
+        })]
+    })
+}
+  , ae = () => e.jsxs("span", {
+    className: "bc-hint",
+    children: ["You are about to access a Department of Homeland Security computer system. This computer system and data therein are property of the U.S. Government and provided for official U.S. Government information and use. There is no expectation of privacy when you use this computer system. The use of a password or any other security measure does not establish an expectation of privacy.", e.jsx("p", {
+        className: "bc-mt-2",
+        children: "By using this system, you consent to the terms set forth in this notice:"
+    }), e.jsxs("ul", {
+        className: "bc-list bc-list--bulleted",
+        children: [e.jsx("li", {
+            children: "You may not process classified national security information on this computer system."
+        }), e.jsx("li", {
+            children: "Access to this system is restricted to authorized users only."
+        }), e.jsx("li", {
+            children: "Unauthorized access, use, or modification of this system or of data contained herein, or in transit to/from this system, may constitute a violation of section 1030 of title 18 of the U.S. Code and other criminal laws."
+        }), e.jsx("li", {
+            children: "Anyone who accesses a Federal computer system without authorization or exceeds access authority, or obtains, alters, damages, destroys, or discloses information, or prevents authorized use of information on the computer system, may be subject to penalties, fines or imprisonment."
+        }), e.jsx("li", {
+            children: "This computer system and any related equipment is subject to monitoring for administrative oversight, law enforcement, criminal investigative purposes, inquiries into alleged wrongdoing or misuse, and to ensure proper performance of applicable security features and procedures."
+        }), e.jsx("li", {
+            children: "DHS may conduct monitoring activities without further notice."
+        })]
+    })]
+})
+  , He = ({setShowUSGovDisclaimer: t}) => {
+    const [s,a] = o.useState("")
+      , n = v()
+      , r = async () => {
+        try {
+            (await fetch("/auth/us_gov_disclaimer", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-Token": n || ""
+                }
+            })).status == 200 ? t(!1) : a("Something went wrong.")
+        } catch {
+            a("Unexpected error occurred, please refresh the page and try again.")
+        }
+    }
+    ;
+    return e.jsxs(g, {
+        isOpen: !0,
+        children: [e.jsx(g.Header, {
+            children: e.jsx(g.Title, {
+                children: "US Gov Disclaimer"
+            })
+        }), e.jsxs(g.Body, {
+            children: [n == null && s == null && e.jsx(F, {}), s && e.jsx(y, {
+                variant: "error",
+                className: "bc-mt-5",
+                children: s
+            }), e.jsx(ae, {})]
+        }), e.jsxs(g.Footer, {
+            className: "bc-flex bc-flex--wrap bc-flex--justify-left bc-helper-gap",
+            children: [e.jsx(b, {
+                onClick: r,
+                children: "Accept"
+            }), e.jsx(k, {
+                variant: "tertiary",
+                label: "Decline and logout"
+            })]
+        })]
+    })
+}
+  , Ye = ["OPT_IN", "NOTIFY", "MIGRATE"]
+  , Ke = () => {
+    const t = Z();
+    if (t.__okta_rollout_cookie)
+        try {
+            const s = JSON.parse(t.__okta_rollout_cookie);
+            if (Ye.includes(s.stage))
+                return {
+                    stage: s.stage,
+                    cutoverAt: new Date(s.cutover_at)
+                }
+        } catch {
+            return
+        }
+}
+;
+let re = null;
+const Qe = ({authenticationEndpoint: t="", sessionPollIntervalSeconds: s=15, expiryBannerWrapperId: a, render: n}) => {
+    const [r,c] = o.useState(!1)
+      , [l,d] = o.useState(!1)
+      , [i,u] = o.useState(!1)
+      , {session: h} = Me({
+        authenticationEndpoint: t,
+        sessionPollIntervalSeconds: s,
+        sendActivityUpdates: i
+    })
+      , f = document.getElementById(re ?? a);
+    if (h == null)
+        return null;
+    {
+        const w = h.secondsRemaining > 300;
+        w !== i && u(w)
+    }
+    if (h.secondsRemaining == 0)
+        return M(T(B, t)),
+        null;
+    const p = Ke()?.stage === "MIGRATE"
+      , m = (r || h.secondsRemaining < 120) && !p
+      , x = async w => {
+        c(!1),
+        d(w),
+        await oe.invalidateQueries({
+            queryKey: ["fetchSession"]
+        })
+    }
+    ;
+    return l ? e.jsx(He, {
+        setShowUSGovDisclaimer: d
+    }) : e.jsxs(e.Fragment, {
+        children: [!m && f != null && ve.createPortal(e.jsx(Be, {
+            secondsRemaining: h.secondsRemaining,
+            staySignedIn: () => c(!0),
+            disableReauthAction: p
+        }), f), m && e.jsx(ze, {
+            secondsRemaining: h.secondsRemaining,
+            authenticationEndpoint: t,
+            saml: h.saml,
+            onComplete: x
+        }), n != null && n(h.secondsRemaining)]
+    })
+}
+  , oe = new ye({
+    defaultOptions: {
+        queries: {
+            refetchOnWindowFocus: !1,
+            refetchIntervalInBackground: !0,
+            retry: 1
+        }
+    }
+})
+  , ie = t => e.jsx(je, {
+    client: oe,
+    children: e.jsx(Qe, {
+        ...t
+    })
+});
+ie.setExpiryBannerWrapperId = t => {
+    re = t
+}
+;
+const Xe = () => {
+    const [t,s] = o.useState("")
+      , a = v()
+      , n = async () => {
+        try {
+            const r = await fetch("/auth/us_gov_disclaimer", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-Token": a || ""
+                }
+            })
+              , c = await r.json();
+            r.status == 200 ? window.location.replace(c.redirect_to.toString()) : s("Something went wrong.")
+        } catch {
+            s("Unexpected error occurred, please refresh the page and try again.")
+        }
+    }
+    ;
+    return e.jsxs("div", {
+        className: "bc-panel bc-panel--lined",
+        children: [e.jsxs("div", {
+            className: "bc-panel__header",
+            children: [e.jsx("span", {
+                className: "bc-panel__title",
+                children: "US Gov Disclaimer"
+            }), a == null && t == null && e.jsx(F, {}), t && e.jsx(y, {
+                variant: "error",
+                className: "bc-mt-5",
+                children: t
+            })]
+        }), e.jsx("div", {
+            className: "bc-panel__main",
+            children: e.jsx(ae, {})
+        }), e.jsxs("div", {
+            className: "bc-panel__footer bc-flex bc-flex--wrap bc-flex--justify-left bc-helper-gap",
+            children: [e.jsx(b, {
+                onClick: n,
+                children: "Accept"
+            }), e.jsx(k, {
+                variant: "tertiary",
+                label: "Decline and logout"
+            })]
+        })]
+    })
+}
+  , q = ({path: t}) => e.jsxs("div", {
+    className: "bc-flex-1",
+    children: [e.jsx("h1", {
+        className: "bc-h1 bc-h1 bc-mt-4",
+        children: "Are you a customer or a researcher?"
+    }), e.jsxs("div", {
+        className: "bc-flex bc-helper-gap",
+        children: [e.jsx("a", {
+            href: `${t}?user_hint=tracker`,
+            className: "bc-btn bc-btn--secondary bc-btn--block bc-btn--large",
+            children: "Customer"
+        }), e.jsx("a", {
+            href: `${t}?user_hint=researcher`,
+            className: "bc-btn bc-btn--secondary bc-btn--block bc-btn--large bc-mt-0",
+            children: "Researcher"
+        })]
+    })]
+});
+var G = (t => (t[t.CredentialsForm = 0] = "CredentialsForm",
+t[t.OtpForm = 1] = "OtpForm",
+t[t.BackupOtpForm = 2] = "BackupOtpForm",
+t))(G || {});
+const Je = ({setOtpCode: t, setCurrentForm: s, hasBackupCode: a, setPassword: n}) => {
+    const r = o.useRef(null);
+    return o.useLayoutEffect( () => {
+        r.current && r.current.focus()
+    }
+    ),
+    e.jsxs(e.Fragment, {
+        children: [e.jsx("div", {
+            children: e.jsxs(b, {
+                variant: "link",
+                onClick: () => {
+                    s(0),
+                    n("")
+                }
+                ,
+                style: {
+                    fontWeight: "normal"
+                },
+                children: [e.jsx(P, {
+                    name: "chevronRight",
+                    isParentColor: !0
+                }), e.jsx("span", {
+                    children: "Return to login"
+                })]
+            })
+        }), e.jsx("h1", {
+            className: "bc-h1 bc-h1 bc-mt-4 bc-mb-2 ",
+            children: "Enter OTP Code"
+        }), e.jsxs("div", {
+            className: "bc-form__group",
+            children: [e.jsx("label", {
+                className: "bc-label",
+                htmlFor: "otp_code",
+                children: "Enter the 6-digit code from the authenticator you set up as your two-factor authentication for this account"
+            }), e.jsx("input", {
+                placeholder: "OTP Code",
+                className: "bc-text-input bc-text-input--block",
+                autoComplete: "one-time-code",
+                type: "number",
+                id: "otp_code",
+                name: "otp_code",
+                onChange: c => t(c.target.value),
+                autoFocus: !0,
+                ref: r
+            })]
+        }), a && e.jsxs("div", {
+            className: "bc-icon bc-icon--info bc-icon--aligntop bc-mt-3",
+            children: [e.jsx("p", {
+                className: "bc-mb-1",
+                children: "If you lose access to your two-factor device and can’t receive the authentication codes, you can enter one of your backup codes."
+            }), e.jsx(b, {
+                variant: "link",
+                onClick: () => s(2),
+                children: "Enter a backup code"
+            })]
+        })]
+    })
+}
+  , Ve = ({setBackupOtpCode: t, setCurrentForm: s, setPassword: a}) => {
+    const n = o.useRef(null);
+    return o.useLayoutEffect( () => {
+        n.current && n.current.focus()
+    }
+    ),
+    e.jsxs(e.Fragment, {
+        children: [e.jsx("div", {
+            children: e.jsxs(b, {
+                variant: "link",
+                onClick: () => {
+                    s(0),
+                    a("")
+                }
+                ,
+                style: {
+                    fontWeight: "normal"
+                },
+                children: [e.jsx(P, {
+                    name: "arrowLeft",
+                    isParentColor: !0
+                }), e.jsx("span", {
+                    children: "Return to login"
+                })]
+            })
+        }), e.jsx("h1", {
+            className: "bc-h1 bc-h1 bc-mt-4 bc-mb-2 ",
+            children: "Enter a backup code"
+        }), e.jsxs("div", {
+            className: "bc-form__group",
+            children: [e.jsx("label", {
+                className: "bc-label",
+                htmlFor: "backup_otp_code",
+                children: "Enter a backup code"
+            }), e.jsx("input", {
+                placeholder: "Backup Code",
+                className: "bc-text-input bc-text-input--block",
+                type: "text",
+                id: "backup_otp_code",
+                name: "backup_otp_code",
+                autoFocus: !0,
+                ref: n,
+                onChange: r => t(r.target.value)
+            })]
+        }), e.jsx("div", {
+            className: "bc-hint bc-mt-3",
+            children: e.jsxs(b, {
+                variant: "link",
+                onClick: () => s(1),
+                children: [e.jsx(P, {
+                    name: "arrowLeft",
+                    isParentColor: !0
+                }), e.jsx("span", {
+                    children: "Go back to two-factor authentication"
+                })]
+            })
+        })]
+    })
+}
+  , Ze = ({username: t, setUsername: s, setPassword: a, userHint: n, rememberMe: r, setRememberMe: c}) => e.jsxs(e.Fragment, {
+    children: [e.jsx("h1", {
+        className: "bc-h1 bc-h1 bc-mt-4 bc-mb-2",
+        children: n === "RESEARCHER" ? "Log in to Researcher portal" : "Log in to Crowdcontrol"
+    }), n == "TRACKER" && e.jsxs(W, {
+        as: "span",
+        children: ["Logging in with", " ", e.jsx("abbr", {
+            title: "Security Assertion Markup Language",
+            children: "SAML"
+        }), "? Only enter your email."]
+    }), e.jsxs("div", {
+        className: "bc-form__group",
+        children: [e.jsx(I, {
+            htmlFor: "username",
+            children: "Email"
+        }), e.jsx(D, {
+            autoComplete: "off",
+            autoFocus: !0,
+            defaultValue: t,
+            id: "username",
+            isFullWidth: !0,
+            name: "username",
+            onChange: l => s(l.target?.value)
+        })]
+    }), e.jsxs("div", {
+        className: "bc-form__group",
+        children: [e.jsx(I, {
+            htmlFor: "password",
+            children: "Password"
+        }), e.jsx(D, {
+            autoComplete: "current-password",
+            id: "password",
+            isFullWidth: !0,
+            name: "password",
+            onChange: l => a(l.target?.value),
+            type: "password"
+        })]
+    }), e.jsx("div", {
+        className: "bc-form__group",
+        children: e.jsx(Se, {
+            type: "checkbox",
+            name: "remember-me",
+            value: "remember-me",
+            label: "Remember me",
+            checked: r,
+            onChange: l => c(l.target.checked)
+        })
+    })]
+})
+  , et = (t, s) => {
+    let a;
+    return [1, 2].includes(t) ? a = s ? "Authenticating…" : "Authenticate" : a = s ? "Logging in…" : "Log in",
+    a
+}
+  , tt = ({userHint: t, confirmationUrl: s, trackerAppHost: a, researcherPortalAppHost: n}) => e.jsx("div", {
+    className: "bc-form__footer",
+    children: e.jsxs("div", {
+        className: "bc-hint",
+        children: [t === "TRACKER" && e.jsxs("div", {
+            children: [e.jsxs("p", {
+                children: ["Forgot your password?", " ", e.jsxs("a", {
+                    href: `${a}/user/password/new`,
+                    children: ["Reset password", " "]
+                })]
+            }), e.jsxs("p", {
+                children: ["Looking for the Researcher portal?", " ", e.jsx("a", {
+                    href: "/login?user_hint=RESEARCHER",
+                    children: "Go to Researcher portal "
+                })]
+            })]
+        }), t == "RESEARCHER" && e.jsxs("div", {
+            children: [e.jsxs("p", {
+                children: ["Forgot your password?", " ", e.jsxs("a", {
+                    href: `${n}/user/password/new`,
+                    children: ["Reset password", " "]
+                })]
+            }), e.jsxs("p", {
+                children: ["Looking for the Customer portal?", " ", e.jsx("a", {
+                    href: "/login?user_hint=TRACKER",
+                    children: "Go to Customer portal"
+                })]
+            }), s?.length !== 0 && e.jsx("p", {
+                children: e.jsx("a", {
+                    href: s,
+                    children: "Resend confirmation email"
+                })
+            })]
+        }), t == "TRACKER" && s?.length !== 0 && e.jsx("p", {
+            children: e.jsx("a", {
+                href: s,
+                children: "Resend confirmation email"
+            })
+        })]
+    })
+});
+function st(t, s, a) {
+    switch (t) {
+    case 0:
+        return s.length == 0 && a.toLowerCase() == "tracker" ? "/login/saml" : "/login";
+    case 2:
+        return "/auth/backup-code";
+    case 1:
+        return "/auth/otp-challenge";
+    default:
+        return "/login"
+    }
+}
+const nt = ({usernameFromServer: t, message: s, userHint: a, trackerAppHost: n, researcherPortalAppHost: r}) => {
+    const [c,l] = o.useState(s)
+      , [d,i] = o.useState(t ?? "")
+      , [u,h] = o.useState("")
+      , [f,p] = o.useState("")
+      , [m,x] = o.useState(!1)
+      , [w,le] = o.useState("")
+      , [R,S] = o.useState(0)
+      , [z,de] = o.useState(!1)
+      , [H,L] = o.useReducer(N => !N, !1)
+      , [ue,he] = o.useState("")
+      , U = we.createRef()
+      , me = et(R, H)
+      , pe = N => {
+        N.preventDefault();
+        const O = {
+            username: d,
+            password: u,
+            otp_code: f,
+            backup_otp_code: w,
+            user_type: U.current.value,
+            remember_me: String(z)
+        }
+          , C = new URLSearchParams(O);
+        L();
+        const j = st(R, u, U.current.value);
+        xe(C, j)
+    }
+      , Y = v()
+      , xe = async (N, O) => {
+        try {
+            const C = await fetch(O, {
+                method: "POST",
+                body: N.toString(),
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                    "X-CSRF-Token": Y || ""
+                }
+            })
+              , j = await C.json();
+            switch (C.status) {
+            case 400:
+                window.location.replace(j.redirect_to.toString());
+                break;
+            case 401:
+                l(j.message),
+                he(j.resend_confirmation_url),
+                S(G[j.inner_form]),
+                setTimeout(L, 5e3);
+                break;
+            case 422:
+                l(j.message),
+                x(j.has_backup_code),
+                S(G[j.inner_form]),
+                L();
+                break;
+            case 200:
+                history.pushState({}, "", "/"),
+                window.location.replace(j.redirect_to.toString());
+                break;
+            default:
+                l("Something went wrong"),
+                S(0),
+                L()
+            }
+        } catch {
+            l("Unexpected error occurred, please refresh the page and try again."),
+            S(0)
+        }
+    }
+    ;
+    return a ? e.jsxs("form", {
+        className: "bc-form bc-flex bc-flex--col",
+        id: "new_user",
+        autoComplete: "off",
+        action: "/login",
+        acceptCharset: "UTF-8",
+        method: "post",
+        onSubmit: pe,
+        children: [Y == null && c == null && e.jsx(F, {}), c && e.jsx(y, {
+            variant: "error",
+            className: "bc-mt-5",
+            children: c
+        }), e.jsx("input", {
+            type: "hidden",
+            name: "user_type",
+            value: a,
+            ref: U
+        }), R == 0 && e.jsx(Ze, {
+            userHint: a,
+            username: d,
+            setUsername: i,
+            setPassword: h,
+            rememberMe: z,
+            setRememberMe: de
+        }), R == 1 && e.jsx(Je, {
+            setOtpCode: p,
+            setCurrentForm: S,
+            hasBackupCode: m,
+            setPassword: h
+        }), R == 2 && e.jsx(Ve, {
+            setBackupOtpCode: le,
+            setCurrentForm: S,
+            setPassword: h
+        }), e.jsx(b, {
+            className: "login-form__login-btn bc-mt-6",
+            disabled: H,
+            isFullWidth: !0,
+            name: "commit",
+            size: "lg",
+            type: "submit",
+            value: "login",
+            children: me
+        }), e.jsx(tt, {
+            userHint: a.toUpperCase(),
+            confirmationUrl: ue,
+            trackerAppHost: n,
+            researcherPortalAppHost: r
+        })]
+    }) : e.jsx(q, {
+        path: "/login"
+    })
+}
+  , at = ["bugcrowd-sf-bg.jpeg", "bugcrowd-tee-bg.jpeg", "join-the-hunt-bg-2.jpeg", "join-the-hunt-bg.jpeg"];
+function rt(t) {
+    return t[Math.floor(Math.random() * t.length)]
+}
+const ot = () => e.jsx("aside", {
+    className: "cc-login-page__aside",
+    style: {
+        position: "fixed",
+        border: "2 px solid yellow",
+        backgroundImage: `url(/media/${rt(at)})`
+    }
+})
+  , ce = () => e.jsx(_e, {
+    isSimplified: !0
+})
+  , it = ({claims: t}) => {
+    const s = t?.picture ?? "https://robohash.org/HBY.png?set=set4"
+      , a = t?.display_name;
+    return e.jsxs(A, {
+        children: [e.jsx(A.Item, {
+            className: "bc-theme bc-nav__item--hex bc-pr-4",
+            children: e.jsx("a", {
+                href: "/",
+                "aria-label": "Home",
+                children: "Home"
+            })
+        }), e.jsx(A.Item, {
+            className: "bc-ml-auto",
+            children: e.jsxs(ke, {
+                children: [e.jsx(b, {
+                    variant: "tertiary",
+                    children: e.jsx(Re, {
+                        src: s,
+                        alt: a ?? "",
+                        size: "xs",
+                        className: "bc-icons"
+                    })
+                }), e.jsx(k, {
+                    variant: "tertiary"
+                })]
+            })
+        })]
+    })
+}
+;
+function ct({description: t}) {
+    return e.jsxs("div", {
+        className: "bc-mt-2",
+        children: [e.jsx(W, {
+            children: "When contacting support please pass on the following error:"
+        }), e.jsx("div", {
+            className: "bc-markdown bc-markdown--bordered bc-mt-1 bc-mb-4",
+            children: e.jsx("code", {
+                children: t
+            })
+        })]
+    })
+}
+function lt({errorDescription: t, loginUrl: s}) {
+    return e.jsxs("div", {
+        className: "bc-form bc-flex bc-flex--col",
+        children: [e.jsxs(y, {
+            variant: "error",
+            className: "bc-mt-0",
+            children: [e.jsx("h4", {
+                children: "There was a problem processing your login request"
+            }), e.jsxs("p", {
+                children: ["Please go back and try again. If the issue persists, please visit ", e.jsx("a", {
+                    href: "https://bugcrowd-support.freshdesk.com/support/tickets/new",
+                    rel: "external",
+                    target: "_blank",
+                    children: "Bugcrowd Support"
+                }), " and create a support ticket."]
+            }), t && e.jsx(ct, {
+                description: t
+            })]
+        }), e.jsx("a", {
+            href: s || "/login",
+            className: "bc-mt-8",
+            children: "← Back to login"
+        })]
+    })
+}
+const dt = ["HOUR", "MINUTE", "SECOND"]
+  , ut = ["IDLE", "ABSOLUTE"]
+  , ht = ({idleSessionAt: t, absoluteSessionTimeoutAt: s}) => {
+    const [a,n] = o.useState()
+      , [r,c] = o.useState(void 0)
+      , [l,d] = o.useState("IDLE")
+      , i = v()
+      , u = new Date(t).toLocaleString()
+      , h = new Date(s).toLocaleString();
+    o.useEffect( () => {
+        p()
+    }
+    , [a, l]);
+    const f = m => {
+        if (!a || r)
+            return;
+        const x = m.elements.namedItem("timeoutAt");
+        x.value = new Date(Date.now() + a).toISOString(),
+        p(),
+        m.submit()
+    }
+      , p = () => {
+        const m = Date.now()
+          , x = Date.parse(l === "IDLE" ? t : s);
+        m >= x ? c("Session timeout has already occurred") : a && x < m + a ? c("New timeout cannot extend existing timeout") : c(void 0)
+    }
+    ;
+    return e.jsxs("div", {
+        className: "bc-flex bc-flex--col",
+        style: {
+            padding: "10px"
+        },
+        children: [e.jsx("h1", {
+            style: {
+                fontSize: "24px",
+                margin: "none"
+            },
+            children: "Session Timeout Override"
+        }), e.jsxs("div", {
+            className: "bc-flex bc-flex--col",
+            children: [e.jsxs("span", {
+                "data-testid": "current-idle-timeout",
+                children: ["Idle timeout: ", u]
+            }), e.jsxs("span", {
+                "data-testid": "current-absolute-timeout",
+                children: ["Absolute expiry ", h]
+            })]
+        }), e.jsxs("form", {
+            className: "bc-form bc-flex bc-flex--col bc-helper-gap",
+            style: {
+                width: "fit-content"
+            },
+            action: "/auth/session-override/timeout",
+            method: "POST",
+            onSubmit: m => f(m.currentTarget),
+            "data-testid": "override-timeout-form",
+            children: [e.jsxs("div", {
+                className: "bc-flex bc-helper-gap",
+                children: [e.jsx(mt, {
+                    updateOverride: d
+                }), e.jsx(pt, {
+                    updateTimeRemainingMs: n
+                })]
+            }), i && e.jsx("input", {
+                type: "hidden",
+                name: "authenticity-token",
+                value: i
+            }), e.jsx("input", {
+                type: "hidden",
+                name: "timeoutAt"
+            }), e.jsxs("div", {
+                className: "bc-flex bc-helper-gap bc-flex--align-center",
+                children: [e.jsx(b, {
+                    type: "submit",
+                    disabled: !a || r !== void 0,
+                    "data-testid": "override-timeout-submit",
+                    children: "Override"
+                }), r && e.jsx("div", {
+                    style: {
+                        color: "red",
+                        fontSize: "14px"
+                    },
+                    "data-testid": "override-timeout-error",
+                    children: r
+                })]
+            })]
+        })]
+    })
+}
+  , mt = ({updateOverride: t}) => e.jsxs("div", {
+    className: "bc-flex bc-flex--align-center bc-helper-gap",
+    children: [e.jsx("label", {
+        children: "Override"
+    }), e.jsx("div", {
+        className: "bc-dropdown",
+        style: {
+            fontSize: "18px"
+        },
+        children: e.jsx("select", {
+            className: "bc-dropdown__select",
+            name: "overrideType",
+            defaultValue: "IDLE",
+            onChange: s => t(s.target.value),
+            "data-testid": "timeout-type-select",
+            children: ut.map(s => e.jsx("option", {
+                value: s,
+                "data-testid": `${s.toLowerCase()}-timeout-option`,
+                children: s.toLowerCase()
+            }, s))
+        })
+    })]
+})
+  , pt = ({updateTimeRemainingMs: t}) => {
+    const [s,a] = o.useState("MINUTE")
+      , [n,r] = o.useState("")
+      , c = i => {
+        r(i.target.value),
+        t(d(i.target.value, s))
+    }
+      , l = i => {
+        const u = i.target.value;
+        a(u),
+        t(d(n, u))
+    }
+      , d = (i, u) => {
+        if (i.length !== 0)
+            switch (u) {
+            case "HOUR":
+                return 36e5 * Number(i);
+            case "MINUTE":
+                return 6e4 * Number(i);
+            case "SECOND":
+                return 1e3 * Number(i)
+            }
+    }
+    ;
+    return e.jsxs("div", {
+        className: "bc-flex bc-flex--align-center bc-helper-gap",
+        children: [e.jsx("label", {
+            children: "timeout in"
+        }), e.jsx("input", {
+            className: "bc-text-input",
+            type: "number",
+            min: "0",
+            value: n,
+            onChange: c,
+            "data-testid": "timeout-input"
+        }), e.jsx("div", {
+            className: "bc-dropdown",
+            style: {
+                fontSize: "18px"
+            },
+            children: e.jsx("select", {
+                className: "bc-dropdown__select",
+                value: s,
+                onChange: l,
+                "data-testid": "time-unit-select",
+                children: dt.map(i => e.jsxs("option", {
+                    value: i,
+                    "data-testid": `${i.toLowerCase()}-option`,
+                    children: [i.toLowerCase(), "s"]
+                }, i))
+            })
+        })]
+    })
+}
+  , xt = ({userHint: t, publicUrl: s}) => {
+    const a = o.useRef(null)
+      , [n,r] = o.useReducer(i => !i, !1)
+      , c = v()
+      , l = i => {
+        i.preventDefault()
+    }
+      , d = async () => {
+        if (a.current?.validity.valid) {
+            r();
+            try {
+                await fetch("/auth/reset-password", {
+                    method: "POST",
+                    headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json",
+                        "X-CSRF-Token": c || ""
+                    },
+                    body: JSON.stringify({
+                        email: a.current?.value,
+                        userType: t
+                    })
+                })
+            } catch (i) {
+                console.error(i)
+            } finally {
+                window.location.href = `${s}/login?user_hint=${t}`
+            }
+        }
+    }
+    ;
+    return t ? e.jsxs("div", {
+        className: "bc-panel bc-panel--action bc-panel--shadow bc-login",
+        children: [e.jsx("div", {
+            className: "bc-panel__header",
+            children: e.jsx("h1", {
+                className: "bc-panel__title",
+                children: "Reset your password"
+            })
+        }), e.jsx("div", {
+            className: "bc-panel__main",
+            children: e.jsxs("form", {
+                onSubmit: l,
+                children: [c === null && e.jsx(F, {}), e.jsx("p", {
+                    className: "bc-hint",
+                    children: "Enter the email address you provided to receive password reset instructions."
+                }), e.jsx(I, {
+                    htmlFor: "user_email",
+                    children: "Email"
+                }), e.jsx(D, {
+                    autoFocus: !0,
+                    className: "bc-text-input bc-text-input--block",
+                    placeholder: "Email",
+                    autoComplete: "email",
+                    required: !0,
+                    type: "email",
+                    name: "email",
+                    ref: a
+                }), e.jsx(b, {
+                    className: "bc-mt-3",
+                    isFullWidth: !0,
+                    name: "submit",
+                    type: "submit",
+                    disabled: n,
+                    onClick: d,
+                    children: n ? "Submitting..." : "Submit"
+                })]
+            })
+        }), e.jsx(bt, {
+            publicUrl: s
+        })]
+    }) : e.jsxs("div", {
+        className: "bc-panel bc-panel--action bc-panel--shadow bc-p-4",
+        children: [e.jsx(q, {
+            path: "/auth/reset-password"
+        }), e.jsx("div", {
+            className: "bc-mt-4",
+            children: e.jsx(ce, {})
+        })]
+    })
+}
+  , bt = ({publicUrl: t}) => e.jsx("div", {
+    className: "bc-panel__footer",
+    children: e.jsx("div", {
+        className: "bc-hint",
+        children: e.jsx("p", {
+            children: e.jsx("a", {
+                href: `${t}/`,
+                children: "← Back to Log in"
+            })
+        })
+    })
+})
+  , ft = ({authenticationEndpoint: t="", saml: s}) => {
+    const a = window.location.search
+      , n = new URLSearchParams(a).get("returnTo");
+    return e.jsxs("div", {
+        className: "bc-panel bc-panel--action bc-panel--shadow bc-panel--opaque",
+        children: [e.jsx("div", {
+            className: "bc-panel__header",
+            children: e.jsx("h1", {
+                className: "bc-panel__title",
+                children: "Your session has expired"
+            })
+        }), e.jsxs("div", {
+            className: "bc-panel__main",
+            children: [e.jsx("p", {
+                className: "bc-hint",
+                children: "We require you to reauthenticate periodically in order to protect your account."
+            }), s ? e.jsx(ne, {
+                onReauthenticated: function() {},
+                inline: !0
+            }) : e.jsx(te, {
+                authenticationEndpoint: t,
+                onReauthenticated: r => window.location.href = r,
+                reauthStrategy: "INLINE",
+                ...n != null ? {
+                    returnTo: n
+                } : {}
+            })]
+        }), e.jsx("div", {
+            className: "bc-panel__footer",
+            children: e.jsx(k, {})
+        })]
+    })
+}
+  , gt = {
+    USGovDisclaimer: Xe,
+    LogoutButton: k,
+    LoginUserHint: q,
+    LoginErrorPanel: lt,
+    LoginForm: nt,
+    LoginBackground: ot,
+    LoginFooter: ce,
+    NavBar: it,
+    ExpiredSessionReauthenticator: ft,
+    SessionTimer: ie,
+    OverrideSessionTimeoutForm: ht,
+    ResetPassword: xt
+}
+  , jt = () => {
+    for (const t of document.querySelectorAll("[data-react-class]")) {
+        if (t.dataset.reactClass == null)
+            continue;
+        const s = gt[t.dataset.reactClass];
+        if (s !== void 0) {
+            const a = t.dataset.props !== void 0 ? JSON.parse(t.dataset.props) : {};
+            Ne.createRoot(t).render(e.jsx(s, {
+                ...a
+            }))
+        } else
+            console.warn(`No component for ${t.dataset.reactClass}`)
+    }
+}
+;
+window.addEventListener("DOMContentLoaded", () => {
+    if (document.documentElement) {
+        const t = document.cookie?.split("theme=")[1]?.split(";")[0] ?? (window.matchMedia("(prefers-color-scheme: dark)")?.matches ? "dark" : "light");
+        document.cookie = `theme=${t}`,
+        t === "dark" && document.body.classList.add("bc-body--dark")
+    }
+    g.setAppElement("body"),
+    jt()
+}
+);
