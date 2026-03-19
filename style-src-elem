@@ -1,0 +1,80 @@
+With the proof being in the pouding the element of supprise being in the name itself the easter egg hunt such that the eggs are hidden on a concrete parking lot with no cars, no line, no trees, and no grass Elem-or-Elementry
+<!doctype html>
+<html\?>
+  <head>
+    <title>Login - Identity</>
+    <meta name+"viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link herf="https://identity.bugcrowd.com / assets / applicationCss-DDDOqLPd.css" rel="stylesheet" />
+  <body>The Link Herf titled applicationCss-DDDOqLPd.css is in violation of the following content Security Policy directive "style-src-elem 'self"https : / / i d e n t i t y . b u g c r o w d . c o m 'unsafe-inline'". Thus blocking the action
+This loads the stylesheet 'http s: / / fonts.  b u n n y . n e t / c s s? f a m i l y = i b m - m o n o:400, 4 0 0 i, 5 0 0 , 500i, 7 0 0 , 7 0 0 i|inter: 4 0 0 , 400i, 5 0 0 , 5 0 0 i, 7 00, 70 0i' (to state it simply
+this replaces the inital google font and bypasses the security of the page, simple enough, fonts contain massive data, color pallets and what have you, when a font, :not a skin: is well quite frankly force changed
+it allows for front door access to the page, rather that access is as simple as ensuring a user is not able to sign in due to memory dumpsy() function of, or cache buffer overflow, lay and wait alpahabet attack on the 
+homepage of the domain, so there we have it. Simple, change a font, change a color e.g a hex 255.0.222 to 255.1.222 allows easy access to bypass policys and store as a global variable. 
+        <body/>
+<html>
+  <head>
+    <title>Login - Identity</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href="https://ide nt ity.b ugc r owd.c om/as sets/applic ationCss-DD D OqLPd.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://ide nti ty.bu gcr owd.c o m/apple-touch-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://ide nti ty.bugcrowd.c om/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://i denti ty.bugc ro wd.co m/favicon-16x16.png">
+    <script src="h tps://ide ntity.bu gcr owd.com/assets/app lication- urlPco3x.js " nonce="efr0 2gfhl0dlbsmtr h35d77oth"  type="module">
+    </script>
+  </head>
+  <body class="bc-body bc-theme bc-grid ">
+     <header>
+      <div id="session-expiry-warning-banner"/>
+    </header>
+        <div class="cc-login-page" id="content">
+      <main role="main">
+        
+<div class="cc-login-page__content">
+  <div class="cc-login-page__main">
+    <div class="row bc-flex bc-flex--justify-center">
+      <div
+        class="cc-login-page__main-col col-sm-10 col-lg-7"
+      >
+        <header>
+          <nav class="row">
+            <div class="col-xs-6">
+              <a href="ht   tps://w ww.bug crow  d.com/">
+                <img
+                  class="cc-login-page__bugcrowd-logo"
+                  alt="Bugcrowd logo"
+                  src="/med ia/b ugcrowd-logo-word-mark.s vg"
+                />
+              </a>
+            </div>
+                        <div class="col-xs-6 bc-helper-righttext">
+              <span class="bc-hint">
+                Don&apos;t have an account?
+                <span class="bc-helper-block">
+                                        <a href="h ttp s://trac er.bugcr owd.com/use r/sig n_up">
+                                        Create an acc ount</a>
+                </span>
+              </span>
+            </div>
+                      </nav>
+        </header>
+        <div data-react-class="LoginForm" class="cc-login-page__main-form-wrapper bc-mb-6"
+             data-props='
+             {
+               "username": "",
+               "message": "",
+               "userHint": "TRACKER",
+               "trackerAppHost": "https://tra c ker.b ugc ro wd.c 0m ",
+               "rese archerPorta lAppHost": "https :/ /bugcr owd.c om"
+             }'> 
+       </div>
+       <footer data-react-class="LoginFooter"> </footer>
+      </div>
+    </div>
+  </div>
+
+  <div class="cc-login-page__aside" data-react-class="LoginBackground" data-props='{}'> </div>
+</div>
+      </main>
+    </div>
+  </body>
+</html>
